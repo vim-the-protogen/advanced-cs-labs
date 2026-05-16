@@ -6,14 +6,14 @@ internal class Program
 {
     static void Main(string[] args)
     {
-        //string path = @"C:\Users\h6\source\repos\Lab 3.1\Aviation\Resources\parts.csv";
-        string path = @"../../../Resources/parts.csv";
+        string path = @"C:\Users\h6\source\repos\Lab 3.1\Aviation\Resources\parts.csv";
 
         IEnumerable<AirplanePart> parts = [];
 
         try
         {
-            parts = EngineFactory.LoadEngineParts(path);
+            //parts = EngineFactory.LoadEngineParts(path);
+            TreeWalker.Walk(".");
         }
         catch (FileNotFoundException ex)
         {
