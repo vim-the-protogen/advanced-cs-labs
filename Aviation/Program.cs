@@ -12,17 +12,12 @@ internal class Program
             Price = 15000.00,
             EngineType = "GE-90",
         };
-        ep.GetPartInfo();
+        ep.SelfTest();
+        Console.WriteLine(EnginePartFormatter.GetPartInfo(ep));
 
         Console.WriteLine("\n-----Airplane Part-----");
         AirplanePart ap = ep;
-        ap.GetPartInfo();
-        //ap.SelfTest(); // <- causes compilation error
-
-        _ = ap switch
-        {
-            ISelfTest st => st.SelfTest(),
-            _ => throw new ArgumentException($"{nameof(ap)} does not implement {nameof(ISelfTest)}")
-        };
+        Console.WriteLine(AirplanePartFormatter.GetPartInfo(ap));
+        Console.WriteLine(AirplanePartFormatter.GetPartInfo(ep));
     }
 }
