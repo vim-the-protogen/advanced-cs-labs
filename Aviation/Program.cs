@@ -6,16 +6,11 @@ internal class Program
 {
     static void Main(string[] args)
     {
-        string path = @"C:\Users\h6\source\repos\Lab 3.1\Aviation\Resources\parts.csv";
-
-        EngineTest engineTest = new();
-
+        string path = @"C:\Users\h6\source\repos\Lab 4.2\Aviation\Resources\parts.csv";
+        List<AirplanePart> parts = [];
         try
         {
-            engineTest.Engines =
-                [.. EngineFactory.LoadEngineParts(path)
-                                 .Select(a => a as EnginePart)];
-            
+            parts = [.. EngineFactory.LoadEngineParts(path)];
         }
         catch (FileNotFoundException ex)
         {
@@ -46,8 +41,7 @@ internal class Program
         }
         finally
         {
-            var engines = engineTest.Engines;
-            foreach ((var engine, int index) in engines.Select((e, i) => (e, i)))
+            foreach ((var engine, int index) in parts.Select((e, i) => (e, i)))
             {
                 Console.WriteLine($"-----Part {index + 1}-----");
                 Console.WriteLine($"{engine.GetPartInfo()}\n");
