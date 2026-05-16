@@ -6,54 +6,16 @@ namespace com.ntier.Aviation;
 
 internal class Program
 {
-    static async Task Main(string[] args)
+    static void Main(string[] args)
     {
         Program self = new();
-        string path = @"../../../Resources/parts.csv";
+        string path = @"C:\Users\h6\source\repos\Lab 4.2\Aviation\Resources\parts.csv";
+        EngineFactory factory = new();
+        List<AirplanePart> parts = [];
 
-        var factoryTask = EngineManager.New(path, OnInventoryExhausted);
-
-        bool runloop;
-        do
-        {
-            runloop = await Execute(factoryTask);
-        }
-        while (runloop);
-
-        Console.WriteLine("Program exited");
-    }
-
-    private static async Task<bool> Execute(Task<EngineManager> factoryTask)
-    {
-        const string defaultPrompt = "Cmd: ";
-
-        ConsoleColor temp = Console.ForegroundColor;
-        Console.ForegroundColor = ConsoleColor.Blue;
-        Console.Write(defaultPrompt);
-        Console.ForegroundColor = temp;
-
-        string[] input = (Console.ReadLine() ?? "").Split(' ');
-        var cmd = input.ParseCommand();
-
-        if (!factoryTask.IsCompleted)
-        {
-            temp = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Parts loading...");
-            Console.ForegroundColor = temp;
-        }
-
-        return await TryTask(cmd(factoryTask));
-    }
-
-    private static void OnInventoryExhausted(object _, InventoryEventArgs part)
-        => Console.WriteLine($"{part.PartNumber} is almost exausted\n");
-
-    private static async Task<T> TryTask<T>(Task<T> exceptionThrowable)
-    {
         try
         {
-            return await exceptionThrowable;
+            parts = [.. factory.LoadEngineParts(path)];
         }
         catch (FileNotFoundException ex)
         {
@@ -83,6 +45,112 @@ internal class Program
             Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
 
-        throw new Exception("Cannot procede due to unhandled exception");
+        bool runloop = true;
+        while (runloop)
+        {
+            runloop = self.Execute(factory);
+        }
+    }
+
+    private bool Execute(EngineFactory factory)
+    {
+        // I want to figure out a way to make the pattern matching better
+        // without needing to use a dictionary.
+        // Maybe use an enum? I don't think printing all the commands is
+        // strictly necessary. Should I create a a help command?
+        const string defaultPrompt =
+            $"""
+            Here are the available commands:
+                exit
+                list
+                get <Part Number>
+                listbypriceascending
+                listbypricedescending
+
+            Cmd: 
+            """;
+        
+        Console.Write(defaultPrompt);
+        string[] input = (Console.ReadLine() ?? "").Split(' ');
+        var cmd = Command(input);
+
+        return cmd(factory);
+    }
+
+    private Func<EngineFactory, bool> Command(string[] input) =>
+        input switch
+        {
+            ["exit"] => f => ExitCommand(input, f),
+            ["list"] => f => ListCommand(input, f),
+            ["get", _] => f => GetCommand(input, f),
+            ["listbypriceascending"] => f => ListByPriceAscendingCommand(input, f),
+            ["listbypricedescending"] => f => ListByPriceDescendingCommand(input, f),
+            [""] => _ =>
+            {
+                Console.WriteLine("");
+                return true;
+            },
+            _ => _ =>
+            {
+                Console.WriteLine($"Invalid Command: {input[0]}");
+                return true;
+            }
+        };
+
+    private bool ListByPriceDescendingCommand(string[] args, EngineFactory factory)
+    {
+        var engines = factory.Cache
+                             .Select(kvp => kvp.Value)
+                             .OrderBy(ap => ap.Price)
+                             .Reverse()
+                             .Select(ap => ap.GetPartInfo());
+        Print(engines);
+        return true;
+    }
+    private bool ListByPriceAscendingCommand(string[] args, EngineFactory factory)
+    {
+        var engines = factory.Cache
+                             .Select(kvp =>  kvp.Value)
+                             .OrderBy(ap => ap.Price)
+                             .Select(ap => ap.GetPartInfo());
+        Print(engines);
+        return true;
+    }
+    private bool ExitCommand(string[] args, EngineFactory factory)
+    {
+        Console.WriteLine("Program Complete");
+        return false;
+    }
+
+    private bool ListCommand(string[] args, EngineFactory factory)
+    {
+        Print(factory.Cache.Select(kvp => kvp.Value.GetPartInfo()));
+        return true;
+    }
+
+    private bool GetCommand(string[] args, EngineFactory factory)
+    {
+        string partNumber = args[1];
+        Console.WriteLine();
+        if (factory.Cache.TryGetValue(partNumber, out var part))
+        {
+            Console.WriteLine(part.GetPartInfo());
+        }
+        else
+        {
+            Console.WriteLine($"Could not find part: {partNumber}\n");
+        }
+        Console.WriteLine();
+        return true;
+    }
+
+    private void Print(IEnumerable<string> list)
+    {
+        Console.WriteLine();
+        foreach (string item in list)
+        {
+            Console.WriteLine(item);
+            Console.WriteLine();
+        }
     }
 }

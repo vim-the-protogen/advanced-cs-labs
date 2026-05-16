@@ -8,17 +8,16 @@ namespace com.ntier.Aviation;
 
 internal static class PartFormatter
 {
-    private static string getBasePartInfo(this AirplanePart ap,
-                                          string prefix = "") =>
-        $"{prefix}Part Number: {ap.PartNumber}\n" +
-        $"{prefix}Description: {ap.Description}\n" +
-        $"{prefix}Price: {ap.Price:C}";
+    private static string getBasePartInfo(this AirplanePart ap) =>
+        $"Part Number: {ap.PartNumber}\n" +
+        $"Description: {ap.Description}\n" +
+        $"Price: {ap.Price:C}";
 
-    public static string GetPartInfo(this AirplanePart ap, string prefix = "") =>
+    public static string GetPartInfo(this AirplanePart ap) =>
         ap switch
         {
-            EnginePart ep => $"{ap.getBasePartInfo(prefix)},\n" +
-                             $"{prefix}Engine Type: {ep.EngineType}",
-            _ => ap.getBasePartInfo(prefix),
+            EnginePart ep => $"{ap.getBasePartInfo()},\n" +
+                             $"Engine Type: {ep.EngineType}",
+            _ => getBasePartInfo(ap),
         };
 }
