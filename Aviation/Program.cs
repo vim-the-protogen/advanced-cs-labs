@@ -8,12 +8,14 @@ internal class Program
     {
         string path = @"C:\Users\h6\source\repos\Lab 3.1\Aviation\Resources\parts.csv";
 
-        IEnumerable<AirplanePart> parts = [];
+        EngineTest engineTest = new();
 
         try
         {
-            //parts = EngineFactory.LoadEngineParts(path);
-            TreeWalker.Walk(".");
+            engineTest.Engines =
+                [.. EngineFactory.LoadEngineParts(path)
+                                 .Select(a => a as EnginePart)];
+            
         }
         catch (FileNotFoundException ex)
         {
@@ -44,10 +46,11 @@ internal class Program
         }
         finally
         {
-            foreach ((var part, int index) in parts.Select((ap, i) => (ap, i)))
+            var engines = engineTest.Engines;
+            foreach ((var engine, int index) in engines.Select((e, i) => (e, i)))
             {
                 Console.WriteLine($"-----Part {index + 1}-----");
-                Console.WriteLine($"{part.GetPartInfo()}\n");
+                Console.WriteLine($"{engine.GetPartInfo()}\n");
             }
 
             Console.WriteLine("Program completed.");
