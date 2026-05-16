@@ -16,12 +16,12 @@ internal abstract partial class AirplanePart
         {
             if (value is null)
             {
-                throw new PartNumberInvalidException($"{nameof(PartNumber)} cannot be assigned to null");
+                throw new PartNumberInvalidFormatException($"{nameof(PartNumber)} cannot be assigned to null");
             }
 
             if (illegalPartNumberChars().IsMatch(value))
             {
-                throw new PartNumberInvalidException($"Part number, \"{value}\", contains a space, \"*\", or \"?\"");
+                throw new PartNumberInvalidFormatException($"Part number, \"{value}\", contains a space, \"*\", or \"?\"");
             }
 
             _partNumber = value;
@@ -41,6 +41,6 @@ internal abstract partial class AirplanePart
     public double _price;
     private string _partNumber = "Default part name";
 
-    [GeneratedRegex(@"[*?\s]|.{,0}")]
+    [GeneratedRegex(@"[*?\s]")]
     private static partial Regex illegalPartNumberChars();
 }
