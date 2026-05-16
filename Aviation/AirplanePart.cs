@@ -43,4 +43,9 @@ internal abstract partial class AirplanePart
 
     [GeneratedRegex(@"[*?\s]")]
     private static partial Regex illegalPartNumberChars();
+
+    public int CompareTo(AirplanePart? other) =>
+        other is not null
+        ? PartNumber.CompareTo(other.PartNumber)
+        : throw new NullReferenceException($"{nameof(AirplanePart)} is null");
 }

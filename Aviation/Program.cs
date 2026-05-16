@@ -41,6 +41,7 @@ internal class Program
         }
         finally
         {
+            parts.Sort();
             foreach ((var engine, int index) in parts.Select((e, i) => (e, i)))
             {
                 Console.WriteLine($"-----Part {index + 1}-----");
