@@ -48,20 +48,26 @@ internal class Program
             Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
 
-        bool runloop = true;
-        while (runloop)
+        bool runloop;
+        do
         {
             runloop = self.Execute(factory);
         }
+        while (runloop);
     }
 
     private bool Execute(EngineFactory factory)
     {
         const string defaultPrompt = "Cmd: ";
-        
+
+        ConsoleColor temp = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.Blue;
         Console.Write(defaultPrompt);
+        Console.ForegroundColor = temp;
+
         string[] input = (Console.ReadLine() ?? "").Split(' ');
         var cmd = input.Execute();
+        
 
         return cmd(factory);
     }
