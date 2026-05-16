@@ -1,59 +1,19 @@
 ﻿using com.ntier.Aviation;
-using System;
-using System.Collections.Immutable;
 
 namespace com.ntier.Aviation;
 
 internal class Program
 {
-    static async Task Main(string[] args)
+    static void Main(string[] args)
     {
-        Program self = new();
+        //string path = @"C:\Users\h6\source\repos\Lab 3.1\Aviation\Resources\parts.csv";
         string path = @"../../../Resources/parts.csv";
 
-        var factoryTask = EngineManager.New(path, OnInventoryExhausted);
+        IEnumerable<AirplanePart> parts = [];
 
-        bool runloop;
-        do
-        {
-            runloop = await Execute(factoryTask);
-        }
-        while (runloop);
-
-        Console.WriteLine("Program exited");
-    }
-
-    private static async Task<bool> Execute(Task<EngineManager> factoryTask)
-    {
-        const string defaultPrompt = "Cmd: ";
-
-        ConsoleColor temp = Console.ForegroundColor;
-        Console.ForegroundColor = ConsoleColor.Blue;
-        Console.Write(defaultPrompt);
-        Console.ForegroundColor = temp;
-
-        string[] input = (Console.ReadLine() ?? "").Split(' ');
-        var cmd = input.ParseCommand();
-
-        if (!factoryTask.IsCompleted)
-        {
-            temp = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Parts loading...");
-            Console.ForegroundColor = temp;
-        }
-
-        return await TryTask(cmd(factoryTask));
-    }
-
-    private static void OnInventoryExhausted(object _, InventoryEventArgs part)
-        => Console.WriteLine($"{part.PartNumber} is almost exausted\n");
-
-    private static async Task<T> TryTask<T>(Task<T> exceptionThrowable)
-    {
         try
         {
-            return await exceptionThrowable;
+            parts = EngineFactory.LoadEngineParts(path);
         }
         catch (FileNotFoundException ex)
         {
@@ -82,7 +42,32 @@ internal class Program
         {
             Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
+        finally
+        {
+            foreach ((var part, int index) in parts.Select((ap, i) => (ap, i)))
+            {
+                Console.WriteLine($"-----Part {index + 1}-----");
+                Console.WriteLine($"{part.GetPartInfo()}\n");
+            }
 
-        throw new Exception("Cannot procede due to unhandled exception");
+            Console.WriteLine("Program completed.");
+        }
+    }
+
+    private static void TestException<T>(T? testParam,
+                                         Func<T> selector,
+                                         Action<T?> mutator)
+    {
+        T foo = selector();
+        try
+        {
+            mutator(testParam);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
+        mutator(foo);
     }
 }
