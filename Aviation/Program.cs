@@ -6,54 +6,19 @@ namespace com.ntier.Aviation;
 
 internal class Program
 {
-    static async Task Main(string[] args)
+    static void Main(string[] args)
     {
         Program self = new();
         string path = @"../../../Resources/parts.csv";
+        EngineFactory factory = new([]);
+        List<AirplanePart> parts = [];
+        factory.InventoryExhausted +=
+           (_, a) => Console.WriteLine($"{a.PartNumber} " +
+                                       $"is almost exausted\n");
 
-        var factoryTask = EngineManager.New(path, OnInventoryExhausted);
-
-        bool runloop;
-        do
-        {
-            runloop = await Execute(factoryTask);
-        }
-        while (runloop);
-
-        Console.WriteLine("Program exited");
-    }
-
-    private static async Task<bool> Execute(Task<EngineManager> factoryTask)
-    {
-        const string defaultPrompt = "Cmd: ";
-
-        ConsoleColor temp = Console.ForegroundColor;
-        Console.ForegroundColor = ConsoleColor.Blue;
-        Console.Write(defaultPrompt);
-        Console.ForegroundColor = temp;
-
-        string[] input = (Console.ReadLine() ?? "").Split(' ');
-        var cmd = input.ParseCommand();
-
-        if (!factoryTask.IsCompleted)
-        {
-            temp = Console.ForegroundColor;
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Parts loading...");
-            Console.ForegroundColor = temp;
-        }
-
-        return await TryTask(cmd(factoryTask));
-    }
-
-    private static void OnInventoryExhausted(object _, InventoryEventArgs part)
-        => Console.WriteLine($"{part.PartNumber} is almost exausted\n");
-
-    private static async Task<T> TryTask<T>(Task<T> exceptionThrowable)
-    {
         try
         {
-            return await exceptionThrowable;
+            parts = [.. factory.LoadEngineParts(path)];
         }
         catch (FileNotFoundException ex)
         {
@@ -83,6 +48,27 @@ internal class Program
             Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
 
-        throw new Exception("Cannot procede due to unhandled exception");
+        bool runloop;
+        do
+        {
+            runloop = self.Execute(factory);
+        }
+        while (runloop);
+    }
+
+    private bool Execute(EngineFactory factory)
+    {
+        const string defaultPrompt = "Cmd: ";
+
+        ConsoleColor temp = Console.ForegroundColor;
+        Console.ForegroundColor = ConsoleColor.Blue;
+        Console.Write(defaultPrompt);
+        Console.ForegroundColor = temp;
+
+        string[] input = (Console.ReadLine() ?? "").Split(' ');
+        var cmd = input.Execute();
+        
+
+        return cmd(factory);
     }
 }
