@@ -12,11 +12,6 @@ internal class Program
         string path = @"C:\Users\h6\source\repos\Lab 4.2\Aviation\Resources\parts.csv";
         EngineFactory factory = new();
         List<AirplanePart> parts = [];
-        List<string> commands = [
-            "exit",
-            "list",
-            "get"
-        ];
 
         try
         {
@@ -50,51 +45,79 @@ internal class Program
             Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
 
-        string printableCommands = commands.Aggregate((a, b) => $"{a}, {b}");
-        string defaultPrompt =
-            $"""
-            Here are the available commands:
-                {printableCommands}
-            """;
         bool runloop = true;
-        string? input = self.PromptUser(defaultPrompt);
-
         while (runloop)
         {
-            Func<string?> command = input switch
-            {
-                null => () => self.PromptUser($"Invalid Commmand\n{defaultPrompt}"),
-                var s when s == commands[0] => () =>
-                {
-                    runloop = false;
-                    Console.WriteLine("Program Complete");
-                    return "";
-                },
-                var s when s == commands[1] => () =>
-                {
-                    self.Print(factory.Cache.Select(kvp => kvp.Value.GetPartInfo()));
-                    return self.PromptUser(defaultPrompt);
-                },
-                var s when s.Contains(commands[2]) => () =>
-                {
-                    string partNumber = s.Split(' ')[1];
-                    if (factory.Cache.TryGetValue(partNumber, out var part))
-                    {
-                        Console.WriteLine(part.GetPartInfo());
-                        return self.PromptUser(defaultPrompt);
-                    }
-                    else
-                    {
-                        return self.PromptUser($"Could not find part: {partNumber}\n" +
-                                               $"{defaultPrompt}");
-                    }
-                    
-                },
-                _ => () => self.PromptUser($"Invalid Commmand\n{defaultPrompt}")
-            };
-
-            input = command();
+            runloop = self.Execute(factory);
         }
+    }
+
+    private bool Execute(EngineFactory factory)
+    {
+        // I want to figure out a way to make the pattern matching better
+        // without needing to use a dictionary.
+        // Maybe use an enum?
+        const string defaultPrompt =
+            $"""
+            Here are the available commands:
+                exit
+                list
+                get <Part Number>
+
+            Cmd: 
+            """;
+        
+        Console.Write(defaultPrompt);
+        string[] input = (Console.ReadLine() ?? "").Split(' ');
+        var cmd = Command(input);
+
+        return cmd(factory);
+    }
+
+    private Func<EngineFactory, bool> Command(string[] input) =>
+        input switch
+        {
+            ["exit"] => f => ExitCommand(input, f),
+            ["list"] => f => ListCommand(input, f),
+            ["get", _] => f => GetCommand(input, f),
+            [""] => _ =>
+            {
+                Console.WriteLine("");
+                return true;
+            },
+            _ => _ =>
+            {
+                Console.WriteLine($"Invalid Command: {input[0]}");
+                return true;
+            }
+        };
+
+    private bool ExitCommand(string[] args, EngineFactory factory)
+    {
+        Console.WriteLine("Program Complete");
+        return false;
+    }
+
+    private bool ListCommand(string[] args, EngineFactory factory)
+    {
+        Print(factory.Cache.Select(kvp => kvp.Value.GetPartInfo()));
+        return true;
+    }
+
+    private bool GetCommand(string[] args, EngineFactory factory)
+    {
+        string partNumber = args[1];
+        Console.WriteLine();
+        if (factory.Cache.TryGetValue(partNumber, out var part))
+        {
+            Console.WriteLine(part.GetPartInfo());
+        }
+        else
+        {
+            Console.WriteLine($"Could not find part: {partNumber}\n");
+        }
+        Console.WriteLine();
+        return true;
     }
 
     private void Print(IEnumerable<string> list)
@@ -103,30 +126,7 @@ internal class Program
         foreach (string item in list)
         {
             Console.WriteLine(item);
+            Console.WriteLine();
         }
-        Console.WriteLine("-----");
-    }
-
-    private string? PromptUser(string prompt)
-    {
-        Console.WriteLine($"\n{prompt}");
-        return Console.ReadLine();
-    }
-
-    private static void TestException<T>(T? testParam,
-                                         Func<T> selector,
-                                         Action<T?> mutator)
-    {
-        T foo = selector();
-        try
-        {
-            mutator(testParam);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-
-        mutator(foo);
     }
 }
