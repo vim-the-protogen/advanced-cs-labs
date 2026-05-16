@@ -13,23 +13,34 @@ internal class Program
             EngineType = "GE-90",
         };
 
+        TestException($"{ep.PartNumber}*",
+                      () => ep.PartNumber,
+                      s => ep.PartNumber = s!);
+        TestException($"{ep.PartNumber}?",
+                      () => ep.PartNumber,
+                      s => ep.PartNumber = s!);
+        TestException($"{ep.PartNumber} ",
+                      () => ep.PartNumber,
+                      s => ep.PartNumber = s!);
+        TestException(string.Empty,
+                      () => ep.PartNumber,
+                      s => ep.PartNumber = s!);
+    }
+
+    private static void TestException<T>(T? testParam,
+                                         Func<T> selector,
+                                         Action<T?> mutator)
+    {
+        T foo = selector();
         try
         {
-            ep.Price = -ep.Price;
+            mutator(testParam);
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
         }
 
-        ep.SelfTest();
-        // Console.WriteLine(EnginePartFormatter.GetPartInfo(ep));
-        Console.WriteLine(ep.GetPartInfo());
-
-        Console.WriteLine("\n-----Airplane Part-----");
-
-        AirplanePart ap = ep;
-        // Console.WriteLine(AirplanePartFormatter.GetPartInfo(ap));
-        Console.WriteLine(ap.GetPartInfo());
+        mutator(foo);
     }
 }
