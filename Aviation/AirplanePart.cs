@@ -1,8 +1,13 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace com.ntier.Aviation;
 
-internal abstract partial class AirplanePart: IComparable<AirplanePart>
+internal abstract partial class AirplanePart
 {
     public string PartNumber
     {
@@ -30,9 +35,6 @@ internal abstract partial class AirplanePart: IComparable<AirplanePart>
         set => _price = value > 0 ? value : throw _negativePriceException;
     }
 
-    public int Count {  get; set; }
-    public int Threshold { get; set; }
-
     private static readonly Exception _negativePriceException =
         new ArgumentException("Price cannot be negative");
 
@@ -41,9 +43,4 @@ internal abstract partial class AirplanePart: IComparable<AirplanePart>
 
     [GeneratedRegex(@"[*?\s]")]
     private static partial Regex illegalPartNumberChars();
-
-    public int CompareTo(AirplanePart? other) =>
-        other is not null
-        ? PartNumber.CompareTo(other.PartNumber)
-        : throw new NullReferenceException($"{nameof(AirplanePart)} is null");
 }
