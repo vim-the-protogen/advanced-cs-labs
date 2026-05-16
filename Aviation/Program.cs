@@ -12,12 +12,24 @@ internal class Program
             Price = 15000.00,
             EngineType = "GE-90",
         };
+
+        try
+        {
+            ep.Price = -ep.Price;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
         ep.SelfTest();
-        Console.WriteLine(EnginePartFormatter.GetPartInfo(ep));
+        // Console.WriteLine(EnginePartFormatter.GetPartInfo(ep));
+        Console.WriteLine(ep.GetPartInfo());
 
         Console.WriteLine("\n-----Airplane Part-----");
+
         AirplanePart ap = ep;
-        Console.WriteLine(AirplanePartFormatter.GetPartInfo(ap));
-        Console.WriteLine(AirplanePartFormatter.GetPartInfo(ep));
+        // Console.WriteLine(AirplanePartFormatter.GetPartInfo(ap));
+        Console.WriteLine(ap.GetPartInfo());
     }
 }
