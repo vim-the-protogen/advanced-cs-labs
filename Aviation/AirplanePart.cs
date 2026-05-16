@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace com.ntier.Aviation;
 
-internal abstract partial class AirplanePart
+internal abstract partial class AirplanePart: IComparable<AirplanePart>
 {
     public string PartNumber
     {

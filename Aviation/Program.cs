@@ -1,4 +1,6 @@
 ﻿using com.ntier.Aviation;
+using System;
+using System.Collections.Immutable;
 
 namespace com.ntier.Aviation;
 
@@ -7,10 +9,12 @@ internal class Program
     static void Main(string[] args)
     {
         string path = @"C:\Users\h6\source\repos\Lab 4.2\Aviation\Resources\parts.csv";
+        EngineFactory factory = new();
         List<AirplanePart> parts = [];
+
         try
         {
-            parts = [.. EngineFactory.LoadEngineParts(path)];
+            parts = [.. factory.LoadEngineParts(path)];
         }
         catch (FileNotFoundException ex)
         {
@@ -41,12 +45,27 @@ internal class Program
         }
         finally
         {
-            parts.Sort();
-            foreach ((var engine, int index) in parts.Select((e, i) => (e, i)))
+            var keys = factory.Cache
+                              .Keys
+                              .OrderBy(s => s)
+                              .Reverse();
+
+            foreach ((string key, int index) in keys.Select((k, i) => (k, i)))
             {
                 Console.WriteLine($"-----Part {index + 1}-----");
-                Console.WriteLine($"{engine.GetPartInfo()}\n");
+                Console.WriteLine($"{factory.Cache[key].GetPartInfo()}\n");
             }
+
+            //var reverseOrderedParts = factory.Cache
+            //                     .OrderBy(kvp => kvp.Value)
+            //                     .Reverse()
+            //                     .Select(kvp => kvp.Value);
+
+            //foreach ((var part, int index) in reverseOrderedParts.Select((p, i) => (p, i)))
+            //{
+            //    Console.WriteLine($"-----Part {index + 1}-----");
+            //    Console.WriteLine($"{part.GetPartInfo()}\n");
+            //}
 
             Console.WriteLine("Program completed.");
         }

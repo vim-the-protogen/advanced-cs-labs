@@ -11,6 +11,12 @@ namespace com.ntier.Aviation;
 
 internal class EngineFactory
 {
+    public Dictionary<string, AirplanePart> Cache
+    {
+        get;
+        private set;
+    } = [];
+
     /// <summary>
     /// Load all <see cref="EnginePart"/>s in the CSV at
     /// <paramref name="path"/>
@@ -21,7 +27,7 @@ internal class EngineFactory
     /// <paramref name="path"/>
     /// </returns>
     /// <exception cref="FileFormatException"></exception>
-    public static IEnumerable<AirplanePart> LoadEngineParts(string path)
+    public IEnumerable<AirplanePart> LoadEngineParts(string path)
     {
         IEnumerable<string[]> csvLines =
             File.ReadLines(path)
@@ -36,15 +42,19 @@ internal class EngineFactory
             throw new FileFormatException($"Headers in {path} are malformed");
         }
 
+        EnginePart part;
         foreach (var line in csvLines.Skip(1))
         {
-            yield return new EnginePart()
+            part = new EnginePart()
             {
                 PartNumber = line[0],
                 Description = line[1],
                 Price = double.Parse(line[2]),
                 EngineType = line[3],
             };
+
+            Cache.Add(part.PartNumber, part);
+            yield return part;
         }
     }
 
