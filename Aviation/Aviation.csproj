@@ -8,8 +8,4 @@
     <RootNamespace>com.ntier.Aviation</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Linq.Async" Version="7.0.1" />
-  </ItemGroup>
-
 </Project>
