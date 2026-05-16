@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace com.ntier.Aviation;
 
-internal class EngineInventoryManager(IEnumerable<AirplanePart> parts) : IEnumerable<AirplanePart>
+internal class EngineInventoryManager : IEnumerable<AirplanePart>
 {
     public event InventoryEventHandler? InventoryExhausted;
     private Dictionary<string, AirplanePart> Cache
     {
         get;
         set;
-    } = parts.ToDictionary(p => p.PartNumber);
+    } = [];
 
     public AirplanePart? this[string partNumber]
     {
@@ -28,23 +28,23 @@ internal class EngineInventoryManager(IEnumerable<AirplanePart> parts) : IEnumer
 
     public AirplanePart? Release(string partNumber)
     {
-        if (this[partNumber] is not AirplanePart part || part.Count <= 0)
+        if (this[partNumber] is AirplanePart part)
         {
+            if (part.Count > 0)
+            {
+                part.Count -= 1;
+                if (part.Count < part.Threshold)
+                {
+                    InventoryExhausted?.Invoke(this, new(part.PartNumber));
+                }
+
+                return part;
+            }
+                
             return null;
         }
 
-        part.Count -= 1;
-
-        if (part.Count == part.Threshold)
-        {
-            InventoryExhausted?.Invoke(this, new(part.PartNumber));
-        }
-        else if (part.Count < part.Threshold)
-        {
-            return null;
-        }
-
-        return part;
+        return null;
     }
 
     public IEnumerator<AirplanePart> GetEnumerator() =>
