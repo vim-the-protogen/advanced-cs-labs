@@ -17,5 +17,12 @@ internal class Program
         Console.WriteLine("\n-----Airplane Part-----");
         AirplanePart ap = ep;
         ap.GetPartInfo();
+        //ap.SelfTest(); // <- causes compilation error
+
+        _ = ap switch
+        {
+            ISelfTest st => st.SelfTest(),
+            _ => throw new ArgumentException($"{nameof(ap)} does not implement {nameof(ISelfTest)}")
+        };
     }
 }
