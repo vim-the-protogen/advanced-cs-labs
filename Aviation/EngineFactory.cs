@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -9,13 +10,21 @@ using System.Threading.Tasks;
 
 namespace com.ntier.Aviation;
 
-internal class EngineFactory
+internal class EngineFactory(EngineInventoryManager manager) : IEnumerable<AirplanePart>
 {
-    public Dictionary<string, AirplanePart> Cache
+    private readonly EngineInventoryManager inventoryManager = manager;
+
+    public AirplanePart? this[string partNumber] =>
+        inventoryManager[partNumber];
+
+    public event InventoryEventHandler? InventoryExhausted
     {
-        get;
-        private set;
-    } = [];
+        add => inventoryManager.InventoryExhausted += value;
+        remove => inventoryManager.InventoryExhausted -= value;
+    }
+
+    public AirplanePart? Release(string partNumber) =>
+        inventoryManager.Release(partNumber);
 
     /// <summary>
     /// Load all <see cref="EnginePart"/>s in the CSV at
@@ -35,7 +44,7 @@ internal class EngineFactory
                 .Select(VerifyColumnCount);
 
         bool headersExist =
-            csvLines.First() is ["PartNumber", "Description", "Price", "EngineType"];
+            csvLines.First() is ["PartNumber", "Description", "Price", "EngineType", "Count", "Threshold"];
 
         if (!headersExist)
         {
@@ -51,9 +60,11 @@ internal class EngineFactory
                 Description = line[1],
                 Price = double.Parse(line[2]),
                 EngineType = line[3],
+                Count = int.Parse(line[4]),
+                Threshold = int.Parse(line[5]),
             };
 
-            Cache.Add(part.PartNumber, part);
+            inventoryManager.Add(part);
             yield return part;
         }
     }
@@ -62,8 +73,16 @@ internal class EngineFactory
         [.. line.Split(',').Select(s => s.Trim())];
 
     private static string[] VerifyColumnCount(string[] line) =>
-        line.Length == 4
+        line.Length == 6
         ? line
         : throw new FormatException($"Number of items is not equal to " +
                                     $"four: {line}");
+
+    public IEnumerator<AirplanePart> GetEnumerator() =>
+        inventoryManager.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 }

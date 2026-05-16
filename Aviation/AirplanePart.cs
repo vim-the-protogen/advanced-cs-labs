@@ -35,6 +35,9 @@ internal abstract partial class AirplanePart: IComparable<AirplanePart>
         set => _price = value > 0 ? value : throw _negativePriceException;
     }
 
+    public int Count {  get; set; }
+    public int Threshold { get; set; }
+
     private static readonly Exception _negativePriceException =
         new ArgumentException("Price cannot be negative");
 
