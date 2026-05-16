@@ -1,8 +1,13 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace com.ntier.Aviation;
 
-internal abstract partial class AirplanePart: IComparable<AirplanePart>
+internal abstract partial class AirplanePart
 {
     public string PartNumber
     {
@@ -29,9 +34,6 @@ internal abstract partial class AirplanePart: IComparable<AirplanePart>
         get => _price;
         set => _price = value > 0 ? value : throw _negativePriceException;
     }
-
-    public int Count {  get; set; }
-    public int Threshold { get; set; }
 
     private static readonly Exception _negativePriceException =
         new ArgumentException("Price cannot be negative");
