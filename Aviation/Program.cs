@@ -56,13 +56,16 @@ internal class Program
     {
         // I want to figure out a way to make the pattern matching better
         // without needing to use a dictionary.
-        // Maybe use an enum?
+        // Maybe use an enum? I don't think printing all the commands is
+        // strictly necessary. Should I create a a help command?
         const string defaultPrompt =
             $"""
             Here are the available commands:
                 exit
                 list
                 get <Part Number>
+                listbypriceascending
+                listbypricedescending
 
             Cmd: 
             """;
@@ -80,6 +83,8 @@ internal class Program
             ["exit"] => f => ExitCommand(input, f),
             ["list"] => f => ListCommand(input, f),
             ["get", _] => f => GetCommand(input, f),
+            ["listbypriceascending"] => f => ListByPriceAscendingCommand(input, f),
+            ["listbypricedescending"] => f => ListByPriceDescendingCommand(input, f),
             [""] => _ =>
             {
                 Console.WriteLine("");
@@ -92,6 +97,25 @@ internal class Program
             }
         };
 
+    private bool ListByPriceDescendingCommand(string[] args, EngineFactory factory)
+    {
+        var engines = factory.Cache
+                             .Select(kvp => kvp.Value)
+                             .OrderBy(ap => ap.Price)
+                             .Reverse()
+                             .Select(ap => ap.GetPartInfo());
+        Print(engines);
+        return true;
+    }
+    private bool ListByPriceAscendingCommand(string[] args, EngineFactory factory)
+    {
+        var engines = factory.Cache
+                             .Select(kvp =>  kvp.Value)
+                             .OrderBy(ap => ap.Price)
+                             .Select(ap => ap.GetPartInfo());
+        Print(engines);
+        return true;
+    }
     private bool ExitCommand(string[] args, EngineFactory factory)
     {
         Console.WriteLine("Program Complete");
