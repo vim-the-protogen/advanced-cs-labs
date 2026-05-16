@@ -8,9 +8,15 @@ internal class Program
 {
     static void Main(string[] args)
     {
+        Program self = new();
         string path = @"C:\Users\h6\source\repos\Lab 4.2\Aviation\Resources\parts.csv";
         EngineFactory factory = new();
         List<AirplanePart> parts = [];
+        List<string> commands = [
+            "exit",
+            "list",
+            "get"
+        ];
 
         try
         {
@@ -43,32 +49,68 @@ internal class Program
         {
             Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
-        finally
+
+        string printableCommands = commands.Aggregate((a, b) => $"{a}, {b}");
+        string defaultPrompt =
+            $"""
+            Here are the available commands:
+                {printableCommands}
+            """;
+        bool runloop = true;
+        string? input = self.PromptUser(defaultPrompt);
+
+        while (runloop)
         {
-            var keys = factory.Cache
-                              .Keys
-                              .OrderBy(s => s)
-                              .Reverse();
-
-            foreach ((string key, int index) in keys.Select((k, i) => (k, i)))
+            Func<string?> command = input switch
             {
-                Console.WriteLine($"-----Part {index + 1}-----");
-                Console.WriteLine($"{factory.Cache[key].GetPartInfo()}\n");
-            }
+                null => () => self.PromptUser($"Invalid Commmand\n{defaultPrompt}"),
+                var s when s == commands[0] => () =>
+                {
+                    runloop = false;
+                    Console.WriteLine("Program Complete");
+                    return "";
+                },
+                var s when s == commands[1] => () =>
+                {
+                    self.Print(factory.Cache.Select(kvp => kvp.Value.GetPartInfo()));
+                    return self.PromptUser(defaultPrompt);
+                },
+                var s when s.Contains(commands[2]) => () =>
+                {
+                    string partNumber = s.Split(' ')[1];
+                    if (factory.Cache.TryGetValue(partNumber, out var part))
+                    {
+                        Console.WriteLine(part.GetPartInfo());
+                        return self.PromptUser(defaultPrompt);
+                    }
+                    else
+                    {
+                        return self.PromptUser($"Could not find part: {partNumber}\n" +
+                                               $"{defaultPrompt}");
+                    }
+                    
+                },
+                _ => () => self.PromptUser($"Invalid Commmand\n{defaultPrompt}")
+            };
 
-            //var reverseOrderedParts = factory.Cache
-            //                     .OrderBy(kvp => kvp.Value)
-            //                     .Reverse()
-            //                     .Select(kvp => kvp.Value);
-
-            //foreach ((var part, int index) in reverseOrderedParts.Select((p, i) => (p, i)))
-            //{
-            //    Console.WriteLine($"-----Part {index + 1}-----");
-            //    Console.WriteLine($"{part.GetPartInfo()}\n");
-            //}
-
-            Console.WriteLine("Program completed.");
+            input = command();
         }
+    }
+
+    private void Print(IEnumerable<string> list)
+    {
+        Console.WriteLine();
+        foreach (string item in list)
+        {
+            Console.WriteLine(item);
+        }
+        Console.WriteLine("-----");
+    }
+
+    private string? PromptUser(string prompt)
+    {
+        Console.WriteLine($"\n{prompt}");
+        return Console.ReadLine();
     }
 
     private static void TestException<T>(T? testParam,
